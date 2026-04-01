@@ -5,10 +5,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.jobtracker.data.JobApplication
 
 // 1. Add the navigation callback parameter
 @Composable
-fun AddJobScreen(onNavigateBack: () -> Unit) {
+fun AddJobScreen(viewModel: JobViewModel, onNavigateBack: () -> Unit) {
     var title by remember { mutableStateOf("") }
     var company by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("") }
@@ -26,8 +27,22 @@ fun AddJobScreen(onNavigateBack: () -> Unit) {
         OutlinedTextField(value = url, onValueChange = { url = it }, label = { Text("Job Posting URL") }, modifier = Modifier.fillMaxWidth())
 
         Button(
-            // 2. Trigger the callback when clicked
-            onClick = { onNavigateBack() },
+            onClick = {
+                // Basic validation: only save if title and company are provided
+                if (title.isNotBlank() && company.isNotBlank()) {
+                    // 1. Create the database entity
+                    val newJob = JobApplication(
+                        title = title,
+                        company = company,
+                        url = url
+                        // ID is 0 (auto-generated) and logoUrl defaults to null
+                    )
+                    // 2. Execute the POST action on a background thread
+                    viewModel.addJob(newJob)
+                    // 3. Return to the list screen
+                    onNavigateBack()
+                }
+            },
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
         ) {
             Text("Save Job")

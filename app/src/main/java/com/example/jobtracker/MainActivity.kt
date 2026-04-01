@@ -12,7 +12,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.jobtracker.ui.theme.JobTrackerTheme
-
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.jobtracker.data.JobDatabase
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,7 +25,12 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // 1. Initialize the routing engine
+                    val context = LocalContext.current
+                    val database = JobDatabase.getDatabase(context)
+                    val viewModel: JobViewModel = viewModel(
+                        factory = JobViewModelFactory(database.jobDao())
+                    )
+                    // Initialize the routing engine
                     val navController = rememberNavController()
 
                     // 2. Define the Router (NavHost) and set the starting screen
@@ -32,6 +39,7 @@ class MainActivity : ComponentActivity() {
                         // Route 1: The List Screen
                         composable("job_list") {
                             JobListScreen(
+                                viewModel = viewModel,
                                 onNavigateToAddJob = {
                                     // Push the add_job screen onto the stack
                                     navController.navigate("add_job")
@@ -42,6 +50,7 @@ class MainActivity : ComponentActivity() {
                         // Route 2: The Add Job Screen
                         composable("add_job") {
                             AddJobScreen(
+                                viewModel = viewModel,
                                 onNavigateBack = {
                                     // Pop the top screen off the stack to go back
                                     navController.popBackStack()

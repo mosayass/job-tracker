@@ -9,19 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-data class Job(val id: Int, val title: String, val company: String, val status: String)
-
-val dummyJobs = listOf(
-    Job(1, "Senior Backend Engineer", "TechCorp", "Applied"),
-    Job(2, "AI Engineer", "DigiNova", "Interviewing"),
-    Job(3, "Software Architect", "CPath", "Offer Received"),
-    Job(4, "Android Developer", "StartupX", "Rejected"),
-    Job(5, "Data Scientist", "DataWorks", "Applied")
-)
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.jobtracker.data.JobApplication
 
 @Composable
-fun JobItem(job: Job) {
+fun JobItem(job: JobApplication) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -37,9 +30,10 @@ fun JobItem(job: Job) {
     }
 }
 
-// NOTE the new parameter: onNavigateToAddJob is a function we pass in
 @Composable
-fun JobListScreen(onNavigateToAddJob: () -> Unit) {
+fun JobListScreen(viewModel: JobViewModel, onNavigateToAddJob: () -> Unit) {
+    // 1. Subscribe to the database flow. This automatically triggers a UI redraw when data changes.
+    val jobList by viewModel.allJobs.collectAsState()
     // Scaffold provides the architectural slot for the floating button
     Scaffold(
         floatingActionButton = {
@@ -61,7 +55,7 @@ fun JobListScreen(onNavigateToAddJob: () -> Unit) {
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
-            items(dummyJobs) { job ->
+            items(jobList) { job ->
                 JobItem(job = job)
             }
         }
