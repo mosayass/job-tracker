@@ -60,7 +60,13 @@ dependencies {
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
     ksp("androidx.room:room-compiler:2.8.4")
-
     // ViewModel integration for Jetpack Compose (Controller)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    // DOM Scraper for Link Previews
+    implementation("org.jsoup:jsoup:1.22.1")
+    // Async Image Loader for Compose
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    // Ktor Network Client (Week 8 Syllabus Requirement)
+    implementation("io.ktor:ktor-client-core:3.4.2")
+    implementation("io.ktor:ktor-client-android:3.4.2")
 }
