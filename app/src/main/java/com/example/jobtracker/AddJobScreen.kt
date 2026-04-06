@@ -6,13 +6,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.jobtracker.data.JobApplication
-
+import androidx.compose.runtime.saveable.rememberSaveable
 // 1. Add the navigation callback parameter
 @Composable
 fun AddJobScreen(viewModel: JobViewModel, onNavigateBack: () -> Unit) {
-    var title by remember { mutableStateOf("") }
-    var company by remember { mutableStateOf("") }
-    var url by remember { mutableStateOf("") }
+    var title by rememberSaveable { mutableStateOf("") }
+    var company by rememberSaveable { mutableStateOf("") }
+    var url by rememberSaveable { mutableStateOf("") }
 
     Column(
         modifier = Modifier

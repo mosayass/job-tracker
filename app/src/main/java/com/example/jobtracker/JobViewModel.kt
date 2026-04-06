@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-//  The Controller
+import com.example.jobtracker.network.WebClient
+import kotlinx.coroutines.Dispatchers
 
 class JobViewModel(private val jobDao: JobDao) : ViewModel() {
 
@@ -22,9 +22,25 @@ class JobViewModel(private val jobDao: JobDao) : ViewModel() {
             initialValue = emptyList() // Default state before the database loads
         )
 
+    // POST endpoint equivalent:
     fun addJob(job: JobApplication) {
-        viewModelScope.launch {
-            jobDao.insert(job)
+        // Dispatchers.IO safely moves this network/database work off the main UI thread
+        viewModelScope.launch(Dispatchers.IO) {
+
+            // 1. Fetch raw HTML using your new WebClient service
+            val htmlText = WebClient.getHtmlString(job.url)
+
+            // 2. If HTML was successfully fetched, extract the image URL
+            // 2. If HTML was successfully fetched, extract the image URL
+            val fetchedLogo = if (htmlText != null) {
+                WebClient.extractLogo(htmlText, job.url)
+            } else {
+                null
+            }
+
+            // 3. Attach the result to a copy of the job and save it to SQLite
+            val finalJobToSave = job.copy(logoUrl = fetchedLogo)
+            jobDao.insert(finalJobToSave)
         }
     }
 

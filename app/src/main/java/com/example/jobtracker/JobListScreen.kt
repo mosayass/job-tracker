@@ -12,20 +12,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.example.jobtracker.data.JobApplication
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.ui.Alignment
 
 @Composable
-fun JobItem(job: JobApplication) {
+fun JobItem(job: JobApplication, onDeleteClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = job.title, style = MaterialTheme.typography.titleLarge)
-            Text(text = job.company, style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Status: ${job.status}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CompanyLogo(logoUrl = job.logoUrl)
+
+            Box(modifier = Modifier.weight(1f)) {
+                JobDetailsText(title = job.title, company = job.company, status = job.status)
+            }
+
+            DeleteActionIcon(onClick = onDeleteClick)
         }
     }
 }
@@ -56,8 +73,46 @@ fun JobListScreen(viewModel: JobViewModel, onNavigateToAddJob: () -> Unit) {
                 )
             }
             items(jobList) { job ->
-                JobItem(job = job)
+                JobItem(
+                    job = job,
+                    onDeleteClick = { viewModel.deleteJob(job) }
+                )
             }
         }
+    }
+}
+@Composable
+private fun CompanyLogo(logoUrl: String?) {
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(logoUrl)
+            .crossfade(true)
+            .error(android.R.drawable.ic_menu_report_image)
+            .build(),
+        contentDescription = "Company Logo",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .size(64.dp)
+            .clip(RoundedCornerShape(8.dp))
+    )
+}
+
+@Composable
+private fun JobDetailsText(title: String, company: String, status: String) {
+    Column {
+        Text(text = title, style = MaterialTheme.typography.titleLarge)
+        Text(text = company, style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = "Status: $status", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+    }
+}
+@Composable
+private fun DeleteActionIcon(onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = "Delete Job",
+            tint = MaterialTheme.colorScheme.error
+        )
     }
 }
