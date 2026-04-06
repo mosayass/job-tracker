@@ -20,9 +20,21 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.ui.Alignment
-
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.wrapContentSize
 @Composable
-fun JobItem(job: JobApplication, onDeleteClick: () -> Unit) {
+fun JobItem(
+    job: JobApplication,
+    onDeleteClick: () -> Unit,
+    onStatusChange: (String) -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -39,14 +51,18 @@ fun JobItem(job: JobApplication, onDeleteClick: () -> Unit) {
             CompanyLogo(logoUrl = job.logoUrl)
 
             Box(modifier = Modifier.weight(1f)) {
-                JobDetailsText(title = job.title, company = job.company, status = job.status)
+                JobDetailsText(
+                    title = job.title,
+                    company = job.company,
+                    currentStatus = job.status,
+                    onStatusSelected = onStatusChange
+                )
             }
 
             DeleteActionIcon(onClick = onDeleteClick)
         }
     }
 }
-
 @Composable
 fun JobListScreen(viewModel: JobViewModel, onNavigateToAddJob: () -> Unit) {
     // 1. Subscribe to the database flow. This automatically triggers a UI redraw when data changes.
@@ -75,7 +91,12 @@ fun JobListScreen(viewModel: JobViewModel, onNavigateToAddJob: () -> Unit) {
             items(jobList) { job ->
                 JobItem(
                     job = job,
-                    onDeleteClick = { viewModel.deleteJob(job) }
+                    onDeleteClick = { viewModel.deleteJob(job) },
+                    onStatusChange = { newStatus ->
+                        // Create a mutated copy of the entity and fire it to the update endpoint
+                        val updatedJob = job.copy(status = newStatus)
+                        viewModel.updateJob(updatedJob)
+                    }
                 )
             }
         }
@@ -98,12 +119,18 @@ private fun CompanyLogo(logoUrl: String?) {
 }
 
 @Composable
-private fun JobDetailsText(title: String, company: String, status: String) {
+private fun JobDetailsText(
+    title: String,
+    company: String,
+    currentStatus: String,
+    onStatusSelected: (String) -> Unit
+) {
     Column {
         Text(text = title, style = MaterialTheme.typography.titleLarge)
         Text(text = company, style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Status: $status", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(4.dp))
+        // Replaced static text with our interactive selector
+        StatusSelector(currentStatus = currentStatus, onStatusSelected = onStatusSelected)
     }
 }
 @Composable
@@ -114,5 +141,30 @@ private fun DeleteActionIcon(onClick: () -> Unit) {
             contentDescription = "Delete Job",
             tint = MaterialTheme.colorScheme.error
         )
+    }
+}
+@Composable
+private fun StatusSelector(currentStatus: String, onStatusSelected: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val statuses = listOf("Applied", "Interview", "Rejected", "Accepted")
+
+    Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
+        TextButton(onClick = { expanded = true }) {
+            Text(text = "Status: $currentStatus")
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            statuses.forEach { status ->
+                DropdownMenuItem(
+                    text = { Text(status) },
+                    onClick = {
+                        onStatusSelected(status)
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
 }
